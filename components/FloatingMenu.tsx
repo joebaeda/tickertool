@@ -68,7 +68,7 @@ const FloatingMenu = () => {
                     </svg>
                 </button>
             </div>
-            <Modal isOpen={isModalOpen} onClose={closeModal} title={modalContent || ''}>
+            <Modal isOpen={isModalOpen} onClose={closeModal}>
                 {renderModalContent()}
             </Modal>
         </div>

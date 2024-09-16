@@ -3,27 +3,33 @@ import React from "react";
 interface ModalProps {
     isOpen: boolean;
     onClose: () => void;
-    title: string;
     children: React.ReactNode;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children }) => {
+const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-            <div className="relative p-3 flex flex-col items-center justify-center max-w-lg w-full">
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md">
+
+            {/* Modal content container */}
+            <div className="flex flex-col items-center justify-center w-full overflow-hidden">
+
+                {/* Close button */}
                 <button
                     onClick={onClose}
-                    className="absolute top-3 bg-gray-200 text-gray-500 p-4 rounded-full hover:bg-gray-300"
                     aria-label="Close"
                 >
-                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="m6 6 12 12m0-12L6 18" stroke="#000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg width={40} height={40} fill="white" viewBox="0 -12 32 32" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M28 6H4c-1.104 0-2-.9-2-2s.896-2 2-2h24c1.104 0 2 .9 2 2s-.896 2-2 2m0-6H4a4 4 0 1 0 0 8h24a4 4 0 1 0 0-8" fillRule="evenodd" />
                     </svg>
                 </button>
-                <h2 className="text-xl font-semibold mb-4 text-center">{title}</h2>
-                {children}
+
+                {/* Scrollable content */}
+                <div className="px-4 pb-4 overflow-y-auto max-h-[96vh] custom-scroll">
+                    {children}
+                </div>
+
             </div>
         </div>
     );

@@ -6,4 +6,12 @@ const withPWA = require('next-pwa')({
 
 module.exports = withPWA({
     // other Next.js config options
+    images: {
+        remotePatterns: [
+          {
+            protocol: 'https',
+            hostname: 'gateway.pinata.cloud',
+          },
+        ],
+      },
 });

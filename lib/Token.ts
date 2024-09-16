@@ -1,5 +1,13 @@
 import { ethers } from 'ethers';
 import { tokenABI } from '@/lib/TokenABI';
+import { tokenCode } from '@/lib/TokenCode';
+
+export const deployTickerContract = async (tokenName: string, tokenSymbol: string, logoUrl: string, tokenDesc: string, creatorFee: string, ethReserve: ethers.BigNumberish, tokenReserve: ethers.BigNumberish, signer: ethers.Signer,) => {
+    const contractFactory = new ethers.ContractFactory(tokenABI, tokenCode, signer);
+    const tx = await contractFactory.deploy(tokenName, tokenSymbol, logoUrl, tokenDesc, creatorFee, ethReserve, tokenReserve);
+    await tx.waitForDeployment();
+    return tx;
+};
 
 export const tickerContract = (tokenAddress?: string, signer?: ethers.Signer) => {
     const provider = new ethers.BrowserProvider(window.ethereum);
@@ -14,13 +22,6 @@ export const tickerContract = (tokenAddress?: string, signer?: ethers.Signer) =>
 export const sendRoyalty = async (tokenAddress: string, signer: ethers.Signer) => {
     const contract = tickerContract(tokenAddress, signer);
     const tx = await contract.payRoyalty();
-    await tx.wait();
-    return tx;
-};
-
-export const addLiquidity = async (tokenAddress: string, tokenAmount: ethers.BigNumberish, ethAmount: ethers.BigNumberish, signer: ethers.Signer) => {
-    const contract = tickerContract(tokenAddress, signer);
-    const tx = await contract.initializeLiquidity(tokenAmount, { value: ethAmount });
     await tx.wait();
     return tx;
 };
@@ -46,6 +47,18 @@ export const approveSpender = async (tokenAddress: string, spender: string, amou
     return tx;
 };
 
+export const tokenCreator = async (tokenAddress: string) => {
+    const contract = tickerContract(tokenAddress);
+    const tokenOwner = await contract.creator();
+    return tokenOwner;
+};
+
+export const creatorFee = async (tokenAddress: string) => {
+    const contract = tickerContract(tokenAddress);
+    const feePercentage = await contract.creatorFeePercentage();
+    return feePercentage;
+};
+
 export const tokenNames = async (tokenAddress: string) => {
     const contract = tickerContract(tokenAddress);
     const tokenName = await contract.name();
@@ -56,6 +69,18 @@ export const tokenSymbols = async (tokenAddress: string) => {
     const contract = tickerContract(tokenAddress);
     const tokenSymbol = await contract.symbol();
     return tokenSymbol;
+};
+
+export const tokenDesc = async (tokenAddress: string) => {
+    const contract = tickerContract(tokenAddress);
+    const tDesc = await contract.tokenDescription();
+    return tDesc;
+};
+
+export const tokenLogo = async (tokenAddress: string) => {
+    const contract = tickerContract(tokenAddress);
+    const tLogo = await contract.tokenImageUrl();
+    return tLogo;
 };
 
 export const tokenPriceInETH = async (tokenAddress: string) => {
@@ -70,28 +95,28 @@ export const ethPriceInToken = async (tokenAddress: string) => {
     return priceInToken;
 };
 
-export const ethReserveAmount = async (tokenAddress: string) => {
+export const totalTokenBurn = async (tokenAddress: string) => {
     const contract = tickerContract(tokenAddress);
-    const etherReserve = await contract.ethReserve();
-    return etherReserve;
+    const totalBurn = await contract.tokenBurn();
+    return totalBurn;
 };
 
-export const tokenReserveAmount = async (tokenAddress: string) => {
+export const totalETHFee = async (tokenAddress: string) => {
     const contract = tickerContract(tokenAddress);
-    const tokensReserve = await contract.tokenReserve();
-    return tokensReserve;
+    const ethFee = await contract.totalEthFeesCollected();
+    return ethFee;
+};
+
+export const totalTokenFee = async (tokenAddress: string) => {
+    const contract = tickerContract(tokenAddress);
+    const tokenFee = await contract.totalTokenFeesCollected();
+    return tokenFee;
 };
 
 export const totalTokenSupply = async (tokenAddress: string) => {
     const contract = tickerContract(tokenAddress);
     const supply = await contract.totalSupply();
     return supply;
-};
-
-export const tokenCreator = async (tokenAddress: string) => {
-    const contract = tickerContract(tokenAddress);
-    const tokenOwner = await contract.creator();
-    return tokenOwner;
 };
 
 export const tokenBalance = async (tokenAddress: string, address: string) => {

@@ -1,28 +1,93 @@
-import { useState, useEffect } from 'react';
-import { ethers, Signer } from 'ethers';
-import { tokenABI } from '@/lib/TokenABI';
-import { tokenCode } from '@/lib/TokenCode';
-import AddLiquidity from './AddLiquidity';
-import { ethReserveAmount, tokenReserveAmount } from '@/lib/Token';
+import { useState, useEffect, ChangeEvent, DragEvent } from 'react';
+import { ethers } from 'ethers';
 import Swap from './Swap';
 import Toast from './Toast';
+import { deployTickerContract } from '@/lib/Token';
+import { Signer } from 'ethers';
+import Image from 'next/image';
 
 interface DeployTokenProps {
-    signer: Signer | null;
+    signer: ethers.Signer | null;
     address: string;
     balance: string;
     networkChainId: number;
     currencySymbol: string;
-    blockExplorer: string;
 }
 
-const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, networkChainId, currencySymbol, blockExplorer }) => {
+const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, networkChainId, currencySymbol }) => {
     const [tokenName, setTokenName] = useState<string>('');
     const [tokenSymbol, setTokenSymbol] = useState<string>('');
+    const [tokenDesc, setTokenDesc] = useState<string>('');
+    const [creatorFee, setCreatorFee] = useState<string>('');
+    const [tokenSupply, setTokenSupply] = useState<string>('');
+    const [tokenPrice, setTokenPrice] = useState<string>('');
+    const [file, setFile] = useState<File | null>(null);
+    const [dragActive, setDragActive] = useState<boolean>(false);
+    const [ipfsHash, setIpfsHash] = useState<string>('');
     const [deploying, setDeploying] = useState<boolean>(false);
     const [contractAddress, setContractAddress] = useState<string | null>(null);
-    const [showAddLiquidityForm, setShowAddLiquidityForm] = useState<boolean>(false);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setFile(e.target.files[0]);
+        }
+    };
+
+    const handleDragOver = (e: DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        setDragActive(true);
+    };
+
+    const handleDragLeave = () => {
+        setDragActive(false);
+    };
+
+    const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+        e.preventDefault();
+        setDragActive(false);
+
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            setFile(e.dataTransfer.files[0]);
+        }
+    };
+
+    const handleClick = () => {
+        // Trigger the hidden file input when the area is clicked
+        document.getElementById('fileInput')?.click();
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!file) {
+            setToast({ message: 'Please select a file to upload', type: 'error' });
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+        setDeploying(true)
+
+        try {
+            const response = await fetch('/api/uploadToIPFS', {
+                method: 'POST',
+                body: formData,
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                setIpfsHash(data.ipfsHash);
+            } else {
+                setToast({ message: 'Something went wrong', type: 'error' });
+            }
+        } catch (err) {
+            setToast({ message: 'Error uploading file', type: 'error' });
+        } finally {
+            setDeploying(false)
+        }
+    };
 
     useEffect(() => {
         if (typeof window !== 'undefined') {
@@ -44,30 +109,14 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
         }
     }, [networkChainId]);
 
-    useEffect(() => {
-        const checkReserves = async () => {
-            if (contractAddress) {
-                const tokenReserve = await tokenReserveAmount(contractAddress);
-                const ethReserve = await ethReserveAmount(contractAddress);
-                if (tokenReserve === BigInt(0) && ethReserve === BigInt(0)) {
-                    setShowAddLiquidityForm(true);
-                }
-            }
-        };
-
-        checkReserves();
-    }, [contractAddress]);
-
     const deployContract = async () => {
         setDeploying(true);
 
         try {
-            const contractFactory = new ethers.ContractFactory(tokenABI, tokenCode, signer);
+            const ethReserve = Number(tokenPrice) * Number(tokenSupply);
 
-            const contract = await contractFactory.deploy(tokenName, tokenSymbol);
-            await contract.waitForDeployment();
-
-            const deployedAddress = await contract.getAddress();
+            const tx = await deployTickerContract(tokenName, tokenSymbol, `ipfs://${ipfsHash}`, tokenDesc, creatorFee, ethers.parseEther(String(ethReserve)), ethers.parseUnits(tokenSupply, 18), signer as Signer);
+            const deployedAddress = await tx.getAddress();
 
             const deploymentData = {
                 deployer: address,
@@ -107,7 +156,7 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
     };
 
     return (
-        <>
+        <div className="w-full">
             {toast && (
                 <Toast
                     message={toast.message}
@@ -116,47 +165,157 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
                 />
             )}
             {contractAddress ? (
-                showAddLiquidityForm ? (
-                    <AddLiquidity tokenAddress={contractAddress} signer={signer} currencySymbol={currencySymbol} blockExplorer={blockExplorer} />
-                ) : (
-                    <Swap tokenAddress={contractAddress} signer={signer} addressConnected={address} addressBalances={balance} currencySymbol={currencySymbol} />
-                )
+                <Swap tokenAddress={contractAddress} signer={signer} addressConnected={address} addressBalances={balance} currencySymbol={currencySymbol} />
             ) : (
-                <div className="p-4 shadow-lg max-w-lg w-full rounded-2xl border bg-gray-100 border-gray-200 font-mono">
-                    <div className="mt-4">
-                        <label className="block mb-2 text-gray-500" htmlFor="tokenName">Token Name:</label>
-                        <input
-                            type="text"
-                            id="tokenName"
-                            name="tokenName"
-                            value={tokenName}
-                            onChange={(e) => setTokenName(e.target.value)}
-                            className="border focus:outline-none p-2 w-full text-gray-500 rounded-xl"
-                        />
+                <div className="flex p-4 flex-col gap-5 sm:flex-row bg-gray-100 rounded-2xl items-center justify-center font-mono">
+
+                    {/* Upload token Logo */}
+                    <div className="w-full p-4 flex flex-col text-gray-500">
+                        {ipfsHash ? (
+                            <div className="w-full overflow-hidden rounded-2xl">
+                                <Image
+                                    src={`https://gateway.pinata.cloud/ipfs/${ipfsHash}`}
+                                    alt={tokenName}
+                                    width={500}
+                                    height={500}
+                                    priority={true}
+                                    className="w-full h-full object-cover"
+                                />
+                            </div>
+                        ) : (
+                            <form onSubmit={handleSubmit} className="w-full">
+                                {/* Drag and Drop area */}
+                                <div
+                                    className={`border-2 border-dashed rounded-lg p-4 cursor-pointer flex flex-col items-center justify-center transition-all ${dragActive ? 'border-blue-500 bg-blue-100' : 'border-gray-300'
+                                        }`}
+                                    onDragOver={handleDragOver}
+                                    onDragLeave={handleDragLeave}
+                                    onDrop={handleDrop}
+                                    onClick={handleClick}
+                                >
+                                    {file ? (
+                                        <p className="text-center">{file.name}</p>
+                                    ) : (
+                                        <p className="text-center">
+                                            Drag & drop your image here, or <span className="text-blue-500 underline">click to select</span>
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Hidden file input */}
+                                <input
+                                    type="file"
+                                    id="fileInput"
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleFileChange}
+                                />
+
+                                {/* Submit button */}
+                                <button
+                                    type="submit"
+                                    disabled={deploying}
+                                    className={`${deploying ? "bg-gray-300 text-gray-500" : "bg-blue-500 text-white"} p-3  rounded-xl mt-4 w-full`}
+                                >
+                                    {deploying ? "Please wait..." : "Upload Logo"}
+                                </button>
+                            </form>
+                        )}
                     </div>
 
-                    <div className="mt-4">
-                        <label className="block mb-2 text-gray-500" htmlFor="tokenSymbol">Token Symbol:</label>
-                        <input
-                            type="text"
-                            id="tokenSymbol"
-                            name="tokenSymbol"
-                            value={tokenSymbol}
-                            onChange={(e) => setTokenSymbol(e.target.value)}
-                            className="border focus:outline-none p-2 w-full text-gray-500 rounded-xl"
-                        />
+                    {/* Initialize Token */}
+                    <div className="w-full p-4 bg-gray-50 rounded-2xl">
+                        <div className="flex flex-row gap-2">
+                            <div className="w-full">
+                                <label className="block mb-2 text-gray-500" htmlFor="tokenName">Token Name:</label>
+                                <input
+                                    type="text"
+                                    id="tokenName"
+                                    name="tokenName"
+                                    placeholder="E.g, Pepe Token"
+                                    value={tokenName}
+                                    onChange={(e) => setTokenName(e.target.value)}
+                                    className="border placeholder:opacity-25 focus:outline-none p-2 w-full text-gray-500 rounded-xl"
+                                />
+                            </div>
+                            <div className="w-full">
+                                <label className="block mb-2 text-gray-500" htmlFor="tokenSymbol">Token Symbol:</label>
+                                <input
+                                    type="text"
+                                    id="tokenSymbol"
+                                    name="tokenSymbol"
+                                    placeholder="E.g, PEPE"
+                                    value={tokenSymbol}
+                                    onChange={(e) => setTokenSymbol(e.target.value)}
+                                    className="border placeholder:opacity-25 focus:outline-none p-2 w-full text-gray-500 rounded-xl"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="w-full mt-2">
+                            <label className="block mb-2 text-gray-500" htmlFor="tokenDesc">Description:</label>
+                            <textarea
+                                id="tokenDesc"
+                                name="tokenDesc"
+                                placeholder="E.g, Pepe token is awesome token with great team and tokenomic..."
+                                value={tokenDesc}
+                                onChange={(e) => setTokenDesc(e.target.value)}
+                                className="border placeholder:opacity-25 focus:outline-none p-2 w-full text-gray-500 rounded-xl"
+                            />
+                        </div>
+
+                        <div className="flex flex-row gap-2">
+                            <div className="w-full">
+                                <label className="block mb-2 text-gray-500" htmlFor="creatorFee">Creator Fee:</label>
+                                <input
+                                    type="text"
+                                    id="creatorFee"
+                                    name="creatorFee"
+                                    placeholder="E.g, 5 (for 5%)"
+                                    value={creatorFee}
+                                    onChange={(e) => setCreatorFee(e.target.value)}
+                                    className="border placeholder:opacity-25 focus:outline-none p-2 w-full text-gray-500 rounded-xl"
+                                />
+                            </div>
+                            <div className="w-full">
+                                <label className="block mb-2 text-gray-500" htmlFor="tokenSupply">Total Supply:</label>
+                                <input
+                                    type="text"
+                                    id="tokenSupply"
+                                    name="tokenSupply"
+                                    placeholder="E.g, 1000000"
+                                    value={tokenSupply}
+                                    onChange={(e) => setTokenSupply(e.target.value)}
+                                    className="border placeholder:opacity-25 focus:outline-none p-2 w-full text-gray-500 rounded-xl"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="mt-2">
+                            <label className="block mb-2 text-gray-500" htmlFor="tokenPrice">Token Price:</label>
+                            <input
+                                type="text"
+                                id="tokenPrice"
+                                name="tokenPrice"
+                                placeholder={`E.g, 0.0001 (price in ${currencySymbol})`}
+                                value={tokenPrice}
+                                onChange={(e) => setTokenPrice(e.target.value)}
+                                className="border placeholder:opacity-25 focus:outline-none p-2 w-full text-gray-500 rounded-xl"
+                            />
+                        </div>
+
+                        <button
+                            onClick={deployContract}
+                            disabled={deploying}
+                            className="w-full mt-4 bg-blue-500 hover:bg-blue-700 text-white p-2 rounded-xl"
+                        >
+                            {deploying ? 'Deploying...' : 'Deploy Contract'}
+                        </button>
                     </div>
 
-                    <button
-                        onClick={deployContract}
-                        disabled={deploying}
-                        className="w-full mt-4 bg-blue-500 hover:bg-blue-700 text-white p-2 rounded-xl"
-                    >
-                        {deploying ? 'Deploying...' : 'Deploy Contract'}
-                    </button>
                 </div>
             )}
-        </>
+        </div>
     );
 };
 

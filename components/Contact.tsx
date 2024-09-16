@@ -1,6 +1,6 @@
 export default function Contact() {
     return (
-        <div className="overflow-y-auto max-h-80 p-4 shadow-lg max-w-lg w-full rounded-2xl border bg-gray-100 border-gray-200 font-mono custom-scroll">
+        <div className="p-4 w-full rounded-2xl bg-gray-100 font-mono">
             <div className="flex flex-col gap-8 mt-5 text-gray-500">
                 <a href="https://t.me/joebaeda" target="_blank" className="flex flex-row gap-2 items-center">
                     <svg width="40" height="40" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">

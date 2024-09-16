@@ -26,7 +26,7 @@ const FloatingMenu = () => {
 
     const renderModalContent = () => {
         if (modalContent === "S") {
-            return <DeployToken signer={signer} address={address} balance={balances} networkChainId={network?.chainIdNumber as number} currencySymbol={network?.ticker as string} blockExplorer={network?.explorer as string} />;
+            return <DeployToken signer={signer} address={address} balance={balances} networkChainId={network?.chainIdNumber as number} currencySymbol={network?.ticker as string} />;
         } else if (modalContent === "H") {
             return <Tutorial currencySymbol={network?.ticker as string} networkName={network?.name as string} />
         } else if (modalContent === "W") {

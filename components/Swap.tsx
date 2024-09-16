@@ -8,11 +8,12 @@ import {
     totalTokenSupply,
     tokenPriceInETH,
     ethPriceInToken,
-    tokenReserveAmount,
-    ethReserveAmount,
-    tokenBalance
+    tokenBalance,
+    creatorFee,
+    tokenLogo
 } from '@/lib/Token';
 import Toast from './Toast';
+import Image from 'next/image';
 
 interface SwapProps {
     tokenAddress: string;
@@ -27,9 +28,11 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
     const [swapType, setSwapType] = useState<'buy' | 'sell'>('buy');
     const [tokenName, setTokenName] = useState<string>('');
     const [tokenSymbol, setTokenSymbol] = useState<string>('');
+    const [tokenImage, setTokenImage] = useState<string>('');
     const [totalSupply, setTotalSupply] = useState<string>('');
     const [ethPrice, setEthPrice] = useState<string | null>(null);
     const [tokenPrice, setTokenPrice] = useState<string | null>(null);
+    const [creatorGotFee, setCreatorGotFee] = useState<string>('');
     const [feeOnEth, setFeeOnEth] = useState<string | null>(null);
     const [feeOnToken, setFeeOnToken] = useState<string | null>(null);
     const [ethMinAmountOut, setETHMinAmountOut] = useState<string | null>(null);
@@ -54,18 +57,17 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
                     setTotalSupply(supply);
                     setTokenBalance(String(tokenFixedOwn));
 
-                    const reserveToken = await tokenReserveAmount(tokenAddress);
-                    const reserveETH = await ethReserveAmount(tokenAddress);
+                    const priceInETH = await tokenPriceInETH(tokenAddress);
+                    const priceInToken = await ethPriceInToken(tokenAddress);
+                    const feeForCreator = await creatorFee(tokenAddress);
+                    const ipfsUrl = await tokenLogo(tokenAddress);
+                    const gatewayUrl = ipfsUrl.replace("ipfs://", "https://gateway.pinata.cloud/ipfs/");
+                    setTokenImage(gatewayUrl)
+                    setCreatorGotFee(String(feeForCreator));
 
-                    if (reserveToken === BigInt(0) && reserveETH === BigInt(0)) {
-                        setEthPrice("0");
-                        setTokenPrice("0");
-                    } else {
-                        const priceInETH = await tokenPriceInETH(tokenAddress);
-                        const priceInToken = await ethPriceInToken(tokenAddress);
-                        setEthPrice(ethers.formatEther(priceInETH));
-                        setTokenPrice(ethers.formatEther(priceInToken));
-                    }
+                    setEthPrice(ethers.formatEther(priceInETH));
+                    setTokenPrice(ethers.formatEther(priceInToken));
+
                 } catch (err) {
                     console.error('Failed to fetch token data:', err);
                 }
@@ -86,11 +88,13 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
                 const priceInEth = Number(ethPrice);
                 const priceInToken = Number(tokenPrice);
 
+                const feeForCreator = await creatorFee(tokenAddress);
+
                 if (swapType === 'buy') {
                     // Calculate tokens out for the given ETH amount
                     const tokensOut = ethAmount / priceInEth;
                     const tokensMinOut = tokensOut * 95 / 100; // Apply slippage
-                    const feeEth = ethAmount * 0.3 / 100; // Aplly fee for development
+                    const feeEth = ethAmount * Number(feeForCreator) / 100; // Aplly fee for creator
 
                     // Convert to readable format
                     setTokenMinAmountOut(String(tokensMinOut));
@@ -99,7 +103,7 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
                     // Calculate ETH out for the given token amount
                     const ethOut = tokenAmount / priceInToken;
                     const ethMinOut = ethOut * 85 / 100; // Apply slippage
-                    const feeToken = tokenAmount * 0.3 / 100 // Apply fee for development
+                    const feeToken = tokenAmount * Number(feeForCreator) / 100 // Apply fee for creator
 
                     // Convert to readable format
                     setETHMinAmountOut(String(ethMinOut));
@@ -111,7 +115,7 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
         };
 
         estimateAmountOut();
-    }, [amount, swapType, ethPrice, tokenPrice]);
+    }, [amount, swapType, ethPrice, tokenPrice, tokenAddress]);
 
     const handleSwap = async () => {
         if (!signer || !tokenAddress) return;
@@ -172,7 +176,7 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
 
     return (
 
-        <div className="p-4 shadow-lg max-w-lg w-full rounded-2xl border bg-gray-100 border-gray-200 font-mono">
+        <div className="flex p-4 text-gray-500 flex-col gap-5 sm:flex-row bg-gray-100 rounded-2xl items-center justify-center font-mono">
             {toast && (
                 <Toast
                     message={toast.message}
@@ -181,38 +185,114 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
                 />
             )}
 
+
+            {/* Token logo */}
+            <div className="w-full sm:p-4">
+                {tokenImage ? (
+                    <div className="w-full overflow-hidden rounded-2xl">
+                        <Image
+                            src={tokenImage}
+                            alt={tokenName}
+                            width={450}
+                            height={450}
+                            priority={true}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                ) : (
+                    <div className="w-full overflow-hidden rounded-2xl">
+                        <Image
+                            src="/poop.webp"
+                            alt={tokenName}
+                            width={450}
+                            height={450}
+                            priority={true}
+                            className="w-full h-full object-cover"
+                        />
+                    </div>
+                )}
+            </div>
+
             {/* Swap Form */}
-            <div className="text-gray-700">
-                <div className="mb-4">
-                    <label htmlFor="amount" className="block text-sm font-medium mb-2">
-                        {swapType === 'buy' ? `${currencySymbol} Amount` : `${tokenSymbol} Amount`}
-                    </label>
-                    <input
-                        type="text"
-                        value={amount}
-                        id="amount"
-                        name="amount"
-                        onChange={(e) => setAmount(e.target.value)}
-                        placeholder="0"
-                        disabled={loading}
-                        className="w-full focus:outline-none p-3 border border-gray-300 rounded-lg"
-                    />
+            <div className="w-full sm:p-4 text-gray-500">
+                <div className="space-y-4">
+                    {/* Input 1: Swap from */}
+                    <div className="p-4 bg-white rounded-xl shadow-sm">
+                        <div className="flex justify-between items-center">
+                            <label htmlFor="fromAmount" className="text-sm font-medium">
+                                {swapType === 'buy' ? `${currencySymbol}` : `${tokenSymbol}`}
+                            </label>
+                            <span className="text-sm font-medium">Balance: {swapType === 'buy' ? `${parseFloat(addressBalances).toFixed(5)} ${currencySymbol}` : `${parseFloat(tokenBalances).toFixed(0)} ${tokenSymbol}`}</span>
+                        </div>
+                        <div className="flex items-center mt-2">
+                            <input
+                                type="text"
+                                value={amount}
+                                id="fromAmount"
+                                name="fromAmount"
+                                onChange={(e) => setAmount(e.target.value)}
+                                placeholder="0.0"
+                                disabled={loading}
+                                className="w-full p-3 bg-transparent text-lg focus:outline-none"
+                            />
+                            <button className="ml-2 px-3 py-1 bg-gray-100 rounded-lg font-semibold">
+                                {swapType === 'buy' ? currencySymbol : tokenSymbol}
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
-                <div className="mb-5 flex justify-between items-center text-sm">
-                    <span>Price {swapType === 'buy' ? `1 ${currencySymbol} = ${parseFloat(tokenPrice as string).toFixed(0) || '0'} ${tokenSymbol}` : `1 ${tokenSymbol} = ${parseFloat(ethPrice as string).toFixed(7) || '0'} ${currencySymbol}`}</span>
+                {/* Switch Button */}
+                <div className="flex justify-center items-center -my-4">
                     <button
                         onClick={() => setSwapType(swapType === 'buy' ? 'sell' : 'buy')}
-                        className="text-blue-500 hover:text-blue-700"
+                        className="p-2 bg-gray-100 rounded-full hover:bg-gray-300 transition"
                         disabled={loading}
                     >
-                        {swapType === 'buy' ? 'Switch to Sell' : 'Switch to Buy'}
+                        <svg width="32" height="32" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <path fill="none" d="M0 0h16v16H0z" />
+                            <path d="M5 16V4.8L2.4 7.4 1 6l6-6v16zm6-4.8 2.6-2.6L15 10l-6 6V0h2z" />
+                        </svg>
                     </button>
                 </div>
 
+                {/* Input 2: Swap to */}
+                <div className="p-4 bg-white rounded-xl shadow-sm">
+                    <div className="flex justify-between items-center">
+                        <label htmlFor="toAmount" className="text-sm font-medium">
+                            {swapType === 'buy' ? `${tokenSymbol}` : `${currencySymbol}`}
+                        </label>
+                        <span className="text-sm font-medium">Balance: {swapType === 'buy' ? `${parseFloat(tokenBalances).toFixed(0)} ${tokenSymbol}` : `${parseFloat(addressBalances).toFixed(5)} ${currencySymbol}`}</span>
+                    </div>
+                    <div className="flex items-center mt-2">
+                        <input
+                            type="text"
+                            value={swapType === 'buy' ? `${parseFloat(tokenMinAmountOut as string).toFixed(0)}` : `${parseFloat(ethMinAmountOut as string).toFixed(5)}`}
+                            id="toAmount"
+                            name="toAmount"
+                            placeholder="0.0"
+                            disabled
+                            className="w-full p-3 bg-transparent text-lg focus:outline-none"
+                        />
+                        <button className="ml-2 px-3 py-1 bg-gray-100 rounded-lg font-semibold">
+                            {swapType === 'buy' ? tokenSymbol : currencySymbol}
+                        </button>
+                    </div>
+                </div>
+
+                {/* Price Information */}
+                <div className="text-center text-sm text-gray-500 my-4">
+                    <span>
+                        Price: {swapType === 'buy'
+                            ? `1 ${currencySymbol} = ${parseFloat(tokenPrice as string).toFixed(0)} ${tokenSymbol}`
+                            : `1 ${tokenSymbol} = ${parseFloat(ethPrice as string).toFixed(7)} ${currencySymbol}`}
+                    </span>
+                </div>
+
+                {/* Swap Button */}
                 <button
                     onClick={handleSwap}
-                    className={`w-full p-3 rounded-lg ${loading ? 'bg-gray-500' : 'bg-blue-500 hover:bg-blue-600'} text-white font-bold mb-3`}
+                    className={`w-full p-3 rounded-lg ${loading ? 'bg-gray-500' : 'bg-blue-500 hover:bg-blue-600'} text-white font-bold`}
                     disabled={loading}
                 >
                     {loading ? 'Processing...' : swapType === 'buy' ? `Buy ${tokenName}` : `Sell ${tokenName}`}
@@ -220,15 +300,13 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
 
                 {swapType === 'buy' ? (
                     <>
-                        <p className="py-2">Your Balance: <span className="float-right">{parseFloat(addressBalances).toFixed(5)} {currencySymbol}</span></p>
-                        <p className="pb-2">Fee (0.3%): <span className="float-right">{feeOnEth ? parseFloat(feeOnEth).toFixed(5) : '0'} {currencySymbol}</span></p>
-                        <p>{tokenSymbol} Received (Est): <span className="float-right">{tokenMinAmountOut ? parseFloat(tokenMinAmountOut).toFixed(0) : '0'} {tokenSymbol}</span></p>
+                        <p className="py-3">Fee &#40;{creatorGotFee}%&#41;: <span className="float-right">{feeOnEth ? parseFloat(feeOnEth).toFixed(5) : '0'} {currencySymbol}</span></p>
+                        <p>{tokenSymbol} Received &#40;Est&#41;: <span className="float-right">{tokenMinAmountOut ? parseFloat(tokenMinAmountOut).toFixed(0) : '0'} {tokenSymbol}</span></p>
                     </>
                 ) : (
                     <>
-                        <p className="py-2">Your Balance: <span className="float-right">{parseFloat(tokenBalances).toFixed(0)} {tokenSymbol}</span></p>
-                        <p className="pb-2">Fee (0.3%): <span className="float-right">{feeOnToken ? parseFloat(feeOnToken).toFixed(0) : '0'} {tokenSymbol}</span></p>
-                        <p>{currencySymbol} Received (Est): <span className="float-right">{ethMinAmountOut ? parseFloat(ethMinAmountOut).toFixed(5) : '0'} {currencySymbol}</span></p>
+                        <p className="py-3">Fee &#40;{creatorGotFee}%&#41;: <span className="float-right">{feeOnToken ? parseFloat(feeOnToken).toFixed(0) : '0'} {tokenSymbol}</span></p>
+                        <p>{currencySymbol} Received &#40;Est&#41;: <span className="float-right">{ethMinAmountOut ? parseFloat(ethMinAmountOut).toFixed(5) : '0'} {currencySymbol}</span></p>
                     </>
                 )}
             </div>

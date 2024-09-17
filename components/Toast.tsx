@@ -14,7 +14,7 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose }) => {
 
     return (
         <div
-            className={`fixed top-[15%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-4 rounded-xl shadow-lg z-50
+            className={`fixed top-[8%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 p-4 rounded-xl shadow-lg z-50
             ${toastStyles} 
             w-11/12 sm:w-[490px] font-mono
             `}

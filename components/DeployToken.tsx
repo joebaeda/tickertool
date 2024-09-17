@@ -25,12 +25,15 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
     const [dragActive, setDragActive] = useState<boolean>(false);
     const [ipfsHash, setIpfsHash] = useState<string>('');
     const [deploying, setDeploying] = useState<boolean>(false);
+    const [uploading, setUploading] = useState<boolean>(false);
     const [contractAddress, setContractAddress] = useState<string | null>(null);
     const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-    const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            setFile(e.target.files[0]);
+            const selectedFile = e.target.files[0];
+            setFile(selectedFile); // Set the file in state
+            await uploadFile(selectedFile); // Automatically trigger file upload
         }
     };
 
@@ -43,12 +46,14 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
         setDragActive(false);
     };
 
-    const handleDrop = (e: DragEvent<HTMLDivElement>) => {
+    const handleDrop = async (e: DragEvent<HTMLDivElement>) => {
         e.preventDefault();
         setDragActive(false);
 
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            setFile(e.dataTransfer.files[0]);
+            const droppedFile = e.dataTransfer.files[0];
+            setFile(droppedFile); // Set the file in state
+            await uploadFile(droppedFile); // Automatically trigger file upload
         }
     };
 
@@ -57,17 +62,11 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
         document.getElementById('fileInput')?.click();
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!file) {
-            setToast({ message: 'Please select a file to upload', type: 'error' });
-            return;
-        }
-
+    // Upload function to handle the file upload logic
+    const uploadFile = async (file: File) => {
         const formData = new FormData();
         formData.append('file', file);
-        setDeploying(true)
+        setUploading(true); // Set uploading state to true
 
         try {
             const response = await fetch('/api/uploadToIPFS', {
@@ -78,14 +77,15 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
             const data = await response.json();
 
             if (response.ok) {
-                setIpfsHash(data.ipfsHash);
+                setIpfsHash(data.ipfsHash); // Set the IPFS hash on success
+                setToast({ message: 'File uploaded successfully', type: 'success' });
             } else {
                 setToast({ message: 'Something went wrong', type: 'error' });
             }
         } catch (err) {
             setToast({ message: 'Error uploading file', type: 'error' });
         } finally {
-            setDeploying(false)
+            setUploading(false); // Set uploading state to false
         }
     };
 
@@ -183,7 +183,7 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
                                 />
                             </div>
                         ) : (
-                            <form onSubmit={handleSubmit} className="w-full">
+                            <form className="w-full">
                                 {/* Drag and Drop area */}
                                 <div
                                     className={`border-2 border-dashed rounded-lg p-4 cursor-pointer flex flex-col items-center justify-center transition-all ${dragActive ? 'border-blue-500 bg-blue-100' : 'border-gray-300'
@@ -197,7 +197,7 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
                                         <p className="text-center">{file.name}</p>
                                     ) : (
                                         <p className="text-center">
-                                            Drag & drop your image here, or <span className="text-blue-500 underline">click to select</span>
+                                            Drag & drop your your token logo here, or <span className="text-blue-500 underline">click to select</span>
                                         </p>
                                     )}
                                 </div>
@@ -211,14 +211,10 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
                                     onChange={handleFileChange}
                                 />
 
-                                {/* Submit button */}
-                                <button
-                                    type="submit"
-                                    disabled={deploying}
-                                    className={`${deploying ? "bg-gray-300 text-gray-500" : "bg-blue-500 text-white"} p-3  rounded-xl mt-4 w-full`}
-                                >
-                                    {deploying ? "Please wait..." : "Upload Logo"}
-                                </button>
+                                {/* Upload logo */}
+                                {uploading && (
+                                    <p className="text-center mt-4 text-gray-500">Uploading logo...</p>
+                                )}
                             </form>
                         )}
                     </div>

@@ -6,7 +6,7 @@ interface TutorialProps {
 const Tutorial: React.FC<TutorialProps> = ({currencySymbol, networkName}) => {
     return (
         <div className="p-4 w-full rounded-2xl text-gray-500 bg-gray-100 font-mono">
-            <p className="my-6">Follow these steps to understand how to deploy and launch your own ERC20 token using Ticker Tool on {networkName} Network.</p>
+            <p className="mb-6">Follow these steps to understand how to deploy and launch your own ERC20 token using Ticker Tool on {networkName} Network.</p>
 
             <ul className="mb-6 list-decimal pl-8">
                 <li>

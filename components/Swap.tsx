@@ -51,11 +51,10 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
                     const supply = ethers.formatEther(supplyInWei);
                     const tokenOwnedWei = await tokenBalance(tokenAddress, addressConnected);
                     const tokenOwned = ethers.formatEther(tokenOwnedWei);
-                    const tokenFixedOwn = Number(tokenOwned) * 99 / 100;
                     setTokenName(name);
                     setTokenSymbol(symbol);
                     setTotalSupply(supply);
-                    setTokenBalance(String(tokenFixedOwn));
+                    setTokenBalance(tokenOwned);
 
                     const priceInETH = await tokenPriceInETH(tokenAddress);
                     const priceInToken = await ethPriceInToken(tokenAddress);
@@ -93,7 +92,7 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
                 if (swapType === 'buy') {
                     // Calculate tokens out for the given ETH amount
                     const tokensOut = ethAmount / priceInEth;
-                    const tokensMinOut = tokensOut * 95 / 100; // Apply slippage
+                    const tokensMinOut = tokensOut * 85 / 100; // Apply slippage
                     const feeEth = ethAmount * Number(feeForCreator) / 100; // Aplly fee for creator
 
                     // Convert to readable format
@@ -222,7 +221,13 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
                             <label htmlFor="fromAmount" className="text-sm font-medium">
                                 {swapType === 'buy' ? `${currencySymbol}` : `${tokenSymbol}`}
                             </label>
-                            <span className="text-sm font-medium">Balance: {swapType === 'buy' ? `${parseFloat(addressBalances).toFixed(5)} ${currencySymbol}` : `${parseFloat(tokenBalances).toFixed(0)} ${tokenSymbol}`}</span>
+                            {/* Make the balance clickable to set the max amount */}
+                            <span
+                                className="text-sm font-medium text-right cursor-pointer"
+                                onClick={() => setAmount(swapType === 'buy' ? addressBalances : tokenBalances)}
+                            >
+                                Balance: {swapType === 'buy' ? `${addressBalances.slice(0, 8)}` : `${tokenBalances.slice(0, 8)}`}
+                            </span>
                         </div>
                         <div className="flex items-center mt-2">
                             <input
@@ -231,16 +236,17 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
                                 id="fromAmount"
                                 name="fromAmount"
                                 onChange={(e) => setAmount(e.target.value)}
-                                placeholder="0.0"
+                                placeholder="0"
                                 disabled={loading}
                                 className="w-full p-3 bg-transparent text-lg focus:outline-none"
                             />
-                            <button className="ml-2 px-3 py-1 bg-gray-100 rounded-lg font-semibold">
-                                {swapType === 'buy' ? currencySymbol : tokenSymbol}
+                            <button onClick={() => setAmount(swapType === 'buy' ? addressBalances : tokenBalances)} className="ml-2 px-3 py-1 bg-gray-100 rounded-lg font-semibold">
+                                MAX
                             </button>
                         </div>
                     </div>
                 </div>
+
 
                 {/* Switch Button */}
                 <div className="flex justify-center items-center -my-4">
@@ -262,20 +268,20 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
                         <label htmlFor="toAmount" className="text-sm font-medium">
                             {swapType === 'buy' ? `${tokenSymbol}` : `${currencySymbol}`}
                         </label>
-                        <span className="text-sm font-medium">Balance: {swapType === 'buy' ? `${parseFloat(tokenBalances).toFixed(0)} ${tokenSymbol}` : `${parseFloat(addressBalances).toFixed(5)} ${currencySymbol}`}</span>
+                        <span className="text-sm font-medium text-right">Balance: {swapType === 'buy' ? `${tokenBalances.slice(0, 8)}` : `${addressBalances.slice(0, 8)}`}</span>
                     </div>
                     <div className="flex items-center mt-2">
                         <input
                             type="text"
-                            value={swapType === 'buy' ? `${parseFloat(tokenMinAmountOut as string).toFixed(0)}` : `${parseFloat(ethMinAmountOut as string).toFixed(5)}`}
+                            value={swapType === 'buy' ? `${tokenMinAmountOut || '0'}` : `${ethMinAmountOut || '0'}`}
                             id="toAmount"
                             name="toAmount"
-                            placeholder="0.0"
+                            placeholder="0"
                             disabled
                             className="w-full p-3 bg-transparent text-lg focus:outline-none"
                         />
-                        <button className="ml-2 px-3 py-1 bg-gray-100 rounded-lg font-semibold">
-                            {swapType === 'buy' ? tokenSymbol : currencySymbol}
+                        <button onClick={() => setAmount(swapType === 'buy' ? addressBalances : tokenBalances)} className="ml-2 px-3 py-1 bg-gray-100 rounded-lg font-semibold">
+                            MAX
                         </button>
                     </div>
                 </div>
@@ -284,8 +290,8 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
                 <div className="text-center text-sm text-gray-500 my-4">
                     <span>
                         Price: {swapType === 'buy'
-                            ? `1 ${currencySymbol} = ${parseFloat(tokenPrice as string).toFixed(0)} ${tokenSymbol}`
-                            : `1 ${tokenSymbol} = ${parseFloat(ethPrice as string).toFixed(7)} ${currencySymbol}`}
+                            ? `1 ${currencySymbol} = ${tokenPrice?.slice(0, 8)} ${tokenSymbol}`
+                            : `1 ${tokenSymbol} = ${ethPrice?.slice(0, 8)} ${currencySymbol}`}
                     </span>
                 </div>
 
@@ -300,13 +306,13 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
 
                 {swapType === 'buy' ? (
                     <>
-                        <p className="py-3">Fee &#40;{creatorGotFee}%&#41;: <span className="float-right">{feeOnEth ? parseFloat(feeOnEth).toFixed(5) : '0'} {currencySymbol}</span></p>
-                        <p>{tokenSymbol} Received &#40;Est&#41;: <span className="float-right">{tokenMinAmountOut ? parseFloat(tokenMinAmountOut).toFixed(0) : '0'} {tokenSymbol}</span></p>
+                        <p className="py-3">Fee &#40;{creatorGotFee}%&#41;: <span className="float-right">{feeOnEth ? feeOnEth.slice(0, 8) : '0'} {currencySymbol}</span></p>
+                        <p>{tokenSymbol} Received &#40;Est&#41;: <span className="float-right">{tokenMinAmountOut ? tokenMinAmountOut.slice(0, 8) : '0'} {tokenSymbol}</span></p>
                     </>
                 ) : (
                     <>
-                        <p className="py-3">Fee &#40;{creatorGotFee}%&#41;: <span className="float-right">{feeOnToken ? parseFloat(feeOnToken).toFixed(0) : '0'} {tokenSymbol}</span></p>
-                        <p>{currencySymbol} Received &#40;Est&#41;: <span className="float-right">{ethMinAmountOut ? parseFloat(ethMinAmountOut).toFixed(5) : '0'} {currencySymbol}</span></p>
+                        <p className="py-3">Fee &#40;{creatorGotFee}%&#41;: <span className="float-right">{feeOnToken ? feeOnToken.slice(0, 8) : '0'} {tokenSymbol}</span></p>
+                        <p>{currencySymbol} Received &#40;Est&#41;: <span className="float-right">{ethMinAmountOut ? ethMinAmountOut.slice(0, 8) : '0'} {currencySymbol}</span></p>
                     </>
                 )}
             </div>

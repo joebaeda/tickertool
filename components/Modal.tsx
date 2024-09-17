@@ -13,7 +13,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
         <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-md">
 
             {/* Modal content container */}
-            <div className="flex flex-col items-center justify-center w-full overflow-hidden">
+            <div className="m-4 max-h-[96vh] flex flex-col items-center bg-gray-100 rounded-2xl justify-center w-full overflow-hidden">
 
                 {/* Close button */}
                 <button
@@ -26,7 +26,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children }) => {
                 </button>
 
                 {/* Scrollable content */}
-                <div className="px-4 pb-4 overflow-y-auto max-h-[96vh] custom-scroll">
+                <div className="overflow-y-auto custom-scroll">
                     {children}
                 </div>
 

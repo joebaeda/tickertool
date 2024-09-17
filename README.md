@@ -45,6 +45,10 @@ GOOGLE_PRIVATE_KEY=your-google-cloud-console-private-key
 GOOGLE_CLIENT_EMAIL=your-google-console-client-email
 NEXT_PUBLIC_TELEGRAM_BOT_TOKEN=your-telegram-bot-token
 NEXT_PUBLIC_TELEGRAM_CHAT_ID=your-telegram-chat-id
+NEXT_PUBLIC_PINATA_GATEAWAY=your-pinata-gateway
+PINATA_API_KEY=your-pinata-api-key
+PINATA_SECRET_API_KEY=your-pinata-secret-key
+PINATA_JWT=your-pinata-jwt
 ```
 
 Replace all value with your own. If you've already deployed the `Ticker Token` contract using this interface, please create your own [Ticker Swap interface](https://github.com/joebaeda/tickerswap), so other user can buy/sell your token.

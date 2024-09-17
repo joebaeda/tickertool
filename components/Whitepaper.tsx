@@ -2,7 +2,7 @@ export default function Whitepaper() {
     return (
 
         <div className="p-4 w-full rounded-2xl text-gray-500 bg-gray-100 font-mono">
-            <p className="my-6">Ticker Tool is an ERC-20 token creation platform that empowers users to mint their own tokens and trade them using a built-in Automated Market Maker &#40;AMM&#41;. This system bypasses the need for external decentralized exchanges &#40;DEXs&#41; like Uniswap, providing a fully decentralized, self-contained solution for token management and trading. The platform integrates directly with any EVM based chain, offering customizable token creation, seamless liquidity management, and a robust fee collection mechanism.</p>
+            <p className="mb-6">Ticker Tool is an ERC-20 token creation platform that empowers users to mint their own tokens and trade them using a built-in Automated Market Maker &#40;AMM&#41;. This system bypasses the need for external decentralized exchanges &#40;DEXs&#41; like Uniswap, providing a fully decentralized, self-contained solution for token management and trading. The platform integrates directly with any EVM based chain, offering customizable token creation, seamless liquidity management, and a robust fee collection mechanism.</p>
 
             <h1 className="text-xl font-semibold mb-4">Introduction</h1>
             <p className="mb-6">Decentralized finance &#40;DeFi&#41; has revolutionized the financial landscape by enabling trustless and permissionless interactions. Ticker Tool builds on this ethos by offering a platform where anyone can create, manage, and trade ERC-20 tokens with a built-in AMM. This approach eliminates reliance on external DEXs and ensures that liquidity and trading are intrinsic to the token itself.</p>

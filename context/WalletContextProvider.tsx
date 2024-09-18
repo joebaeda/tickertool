@@ -5,12 +5,13 @@ import { ethers, Signer } from 'ethers';
 import { supportedNetwork } from '@/lib/SupportedNetwork';
 
 interface NetworkProps {
-    name: string;
+    networkName: string;
     chainIdHex: string;
     chainIdNumber: number;
+    rpcUrl: string;
     explorer: string;
-    logo: string;
-    ticker: string;
+    networkLogo: string;
+    nativeCurrency: string;
 }
 
 interface WalletContextProps {

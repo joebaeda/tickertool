@@ -26,9 +26,9 @@ const FloatingMenu = () => {
 
     const renderModalContent = () => {
         if (modalContent === "S") {
-            return <DeployToken signer={signer} address={address} balance={balances} networkChainId={network?.chainIdNumber as number} currencySymbol={network?.ticker as string} />;
+            return <DeployToken signer={signer} address={address} balance={balances} networkChainId={network?.chainIdNumber as number} networkChainCurrencySymbol={network?.nativeCurrency as string} networkChainHex={network?.chainIdHex as string} networkChainName={network?.networkName as string} networkChainLogoUrls={network?.networkLogo as string} networkChainRPCUrls={network?.rpcUrl as string} networkChainExplorerUrls={network?.explorer as string} />;
         } else if (modalContent === "H") {
-            return <Tutorial currencySymbol={network?.ticker as string} networkName={network?.name as string} />
+            return <Tutorial currencySymbol={network?.nativeCurrency as string} networkName={network?.networkName as string} />
         } else if (modalContent === "W") {
             return <Whitepaper />
         } else if (modalContent === "C") {

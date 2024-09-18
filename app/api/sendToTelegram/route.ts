@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
     try {
-        const { deployer, contract, network } = await request.json();
+        const { tokenAddress, tokenChainId, deployer } = await request.json();
 
         const botToken = process.env.NEXT_PUBLIC_TELEGRAM_BOT_TOKEN;
         const chatId = process.env.NEXT_PUBLIC_TELEGRAM_CHAT_ID;
-        const message = `Contract deployed!\nDeployer: ${deployer}\nContract: ${contract}\nNetwork: ${network}`;
+        const message = `Contract deployed!\nContract: ${tokenAddress}\nNetwork: ${tokenChainId}\nDeployer: ${deployer}`;
 
         await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
             method: 'POST',

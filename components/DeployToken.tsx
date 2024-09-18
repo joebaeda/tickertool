@@ -11,10 +11,15 @@ interface DeployTokenProps {
     address: string;
     balance: string;
     networkChainId: number;
-    currencySymbol: string;
+    networkChainHex: string;
+    networkChainName: string;
+    networkChainLogoUrls: string;
+    networkChainRPCUrls: string;
+    networkChainExplorerUrls: string;
+    networkChainCurrencySymbol: string;
 }
 
-const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, networkChainId, currencySymbol }) => {
+const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, networkChainId, networkChainHex, networkChainName, networkChainLogoUrls, networkChainRPCUrls, networkChainExplorerUrls, networkChainCurrencySymbol }) => {
     const [tokenName, setTokenName] = useState<string>('');
     const [tokenSymbol, setTokenSymbol] = useState<string>('');
     const [tokenDesc, setTokenDesc] = useState<string>('');
@@ -95,8 +100,8 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
 
             if (storedData) { // Check if storedData is not null
                 try {
-                    const { contract } = JSON.parse(storedData);
-                    setContractAddress(contract);
+                    const { tokenAddress } = JSON.parse(storedData);
+                    setContractAddress(tokenAddress);
                     setToast({ message: 'You have one active Token on this Network', type: 'success' });
                 } catch (error) {
                     console.error('Error parsing stored data:', error);
@@ -118,14 +123,30 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
             const tx = await deployTickerContract(tokenName, tokenSymbol, `ipfs://${ipfsHash}`, tokenDesc, creatorFee, ethers.parseEther(String(ethReserve)), ethers.parseUnits(tokenSupply, 18), signer as Signer);
             const deployedAddress = await tx.getAddress();
 
-            const deploymentData = {
+            const deploymentSheetData = {
+                tokenAddress: deployedAddress,
+                tokenName: tokenName,
+                tokenSymbol: tokenSymbol,
+                tokenDescription: tokenDesc,
+                tokenLogoUrls: `ipfs://${ipfsHash}`,
+                tokenChainName: networkChainName,
+                tokenChainId: networkChainId,
+                tokenChainHex: networkChainHex,
+                tokenChainLogoUrls: networkChainLogoUrls,
+                tokenChainCurrency: networkChainCurrencySymbol,
+                tokenChainRPCUrls: networkChainRPCUrls,
+                tokenChainExplorerUrls: networkChainExplorerUrls,
                 deployer: address,
-                contract: deployedAddress,
-                network: networkChainId,
+            };
+
+            const deploymentTGData = {
+                tokenAddress: deployedAddress,
+                tokenChainId: networkChainId,
+                deployer: address,
             };
 
             if (typeof window !== 'undefined') {
-                localStorage.setItem(`deployed_To_${networkChainId}`, JSON.stringify(deploymentData));
+                localStorage.setItem(`deployed_To_${networkChainId}`, JSON.stringify(deploymentSheetData));
             }
 
             // Save details to Google Sheets via API route
@@ -134,7 +155,7 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(deploymentData),
+                body: JSON.stringify(deploymentSheetData),
             });
 
             // Send details via Telegram via API route
@@ -143,7 +164,7 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(deploymentData),
+                body: JSON.stringify(deploymentTGData),
             });
 
             // Refresh the page after the transaction is confirmed
@@ -165,7 +186,7 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
                 />
             )}
             {contractAddress ? (
-                <Swap tokenAddress={contractAddress} signer={signer} addressConnected={address} addressBalances={balance} currencySymbol={currencySymbol} />
+                <Swap tokenAddress={contractAddress} signer={signer} addressConnected={address} addressBalances={balance} currencySymbol={networkChainCurrencySymbol} />
             ) : (
                 <div className="flex p-4 flex-col gap-5 sm:flex-row bg-gray-100 rounded-2xl items-center justify-center font-mono">
 
@@ -174,7 +195,7 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
                         {ipfsHash ? (
                             <div className="w-full overflow-hidden rounded-2xl">
                                 <Image
-                                    src={`https://gateway.pinata.cloud/ipfs/${ipfsHash}`}
+                                    src={`https://ipfs.io/ipfs/${ipfsHash}`}
                                     alt={tokenName}
                                     width={500}
                                     height={500}
@@ -293,7 +314,7 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
                                 type="text"
                                 id="tokenPrice"
                                 name="tokenPrice"
-                                placeholder={`E.g, 0.0001 (price in ${currencySymbol})`}
+                                placeholder={`E.g, 0.0001 (price in ${networkChainCurrencySymbol})`}
                                 value={tokenPrice}
                                 onChange={(e) => setTokenPrice(e.target.value)}
                                 className="border placeholder:opacity-25 focus:outline-none p-2 w-full text-gray-500 rounded-xl"

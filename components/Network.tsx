@@ -1,16 +1,16 @@
 import Image from "next/image";
 
 interface SelectedNetworkProps {
-    name: string;
+    networkName: string;
     chainIdHex: string;
-    logo: string;
+    networkLogo: string;
 }
 
 interface NetworkProps {
     networks: SelectedNetworkProps[];
 }
 
-const SelectedNetwork: React.FC<SelectedNetworkProps> = ({ name, chainIdHex, logo }) => {
+const SelectedNetwork: React.FC<SelectedNetworkProps> = ({ networkName, chainIdHex, networkLogo }) => {
     const switchNetwork = async () => {
         try {
             await window.ethereum.request({
@@ -26,8 +26,8 @@ const SelectedNetwork: React.FC<SelectedNetworkProps> = ({ name, chainIdHex, log
 
     return (
         <div className="p-4 border flex flex-col justify-center items-center text-gray-500 bg-gray-200 rounded-lg shadow-md">
-            <Image width={30} height={30} src={logo} priority={true} alt={`${name} logo`} className="w-16 h-16 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">{name}</h3>
+            <Image width={30} height={30} src={networkLogo} priority={true} alt={`${networkName} logo`} className="w-16 h-16 mb-4" />
+            <h3 className="text-lg font-semibold mb-2">{networkName}</h3>
             <button
                 onClick={switchNetwork}
                 className="text-white md:text-clip bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md"

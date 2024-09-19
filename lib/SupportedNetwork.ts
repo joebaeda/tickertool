@@ -9,6 +9,15 @@ export const supportedNetwork = [
         nativeCurrency: "ETH",
     },
     {
+        networkName: "OP Mainnet",
+        chainIdHex: "0xa",
+        chainIdNumber: 10,
+        rpcUrl: "https://mainnet.optimism.io",
+        explorer: "https://optimistic.etherscan.io",
+        networkLogo: "/network/op.svg",
+        nativeCurrency: "ETH",
+    },
+    {
         networkName: "Base",
         chainIdHex: "0x2105",
         chainIdNumber: 8453,
@@ -26,6 +35,7 @@ export const supportedNetwork = [
         networkLogo: "/network/bsc.svg",
         nativeCurrency: "BNB",
     },
+    // Testnet Network
     {
         networkName: "Sepolia",
         chainIdHex: "0xaa36a7",

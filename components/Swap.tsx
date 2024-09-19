@@ -60,7 +60,7 @@ const Swap: React.FC<SwapProps> = ({ tokenAddress, signer, addressConnected, add
                     const priceInToken = await ethPriceInToken(tokenAddress);
                     const feeForCreator = await creatorFee(tokenAddress);
                     const ipfsUrl = await tokenLogo(tokenAddress);
-                    const gatewayUrl = ipfsUrl.replace("ipfs://", "https://ipfs.io/ipfs/");
+                    const gatewayUrl = ipfsUrl.replace("ipfs://", "https://gateway.pinata.cloud/ipfs/");
                     setTokenImage(gatewayUrl)
                     setCreatorGotFee(String(feeForCreator));
 

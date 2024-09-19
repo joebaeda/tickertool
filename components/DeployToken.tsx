@@ -195,7 +195,7 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
                         {ipfsHash ? (
                             <div className="w-full overflow-hidden rounded-2xl">
                                 <Image
-                                    src={`https://ipfs.io/ipfs/${ipfsHash}`}
+                                    src={`https://gateway.pinata.cloud/ipfs/${ipfsHash}`}
                                     alt={tokenName}
                                     width={500}
                                     height={500}

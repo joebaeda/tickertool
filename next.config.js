@@ -10,7 +10,7 @@ module.exports = withPWA({
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'ipfs.io',
+        hostname: 'gateway.pinata.cloud',
       },
     ],
   },

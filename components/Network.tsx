@@ -27,10 +27,10 @@ const SelectedNetwork: React.FC<SelectedNetworkProps> = ({ networkName, chainIdH
     return (
         <div className="p-4 border flex flex-col justify-center items-center text-gray-500 bg-gray-200 rounded-lg shadow-md">
             <Image width={30} height={30} src={networkLogo} priority={true} alt={`${networkName} logo`} className="w-16 h-16 mb-4" />
-            <h3 className="text-lg font-semibold mb-2">{networkName}</h3>
+            <h3 className="text-lg text-center font-semibold mb-2">{networkName}</h3>
             <button
                 onClick={switchNetwork}
-                className="text-white md:text-clip bg-blue-500 hover:bg-blue-600 px-4 py-2 rounded-md"
+                className="w-full text-white md:text-clip bg-blue-500 hover:bg-blue-600 px-4 py-3 rounded-xl"
             >
                 Switch
             </button>
@@ -40,10 +40,12 @@ const SelectedNetwork: React.FC<SelectedNetworkProps> = ({ networkName, chainIdH
 
 const Network: React.FC<NetworkProps> = ({ networks }) => {
     return (
-        <div className="m-4 grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4 z-10">
+        <div className="fixed inset-0 top-[21%] overflow-y-auto custom-scroll bg-gray-50 rounded-t-2xl font-mono">
+        <div className="m-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 z-10">
             {networks.map((network) => (
                 <SelectedNetwork key={network.chainIdHex} {...network} />
             ))}
+        </div>
         </div>
     );
 };

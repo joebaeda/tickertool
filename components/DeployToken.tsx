@@ -120,8 +120,7 @@ const DeployToken: React.FC<DeployTokenProps> = ({ signer, address, balance, net
         try {
             const ethReserve = Number(tokenPrice) * Number(tokenSupply);
 
-            const tx = await deployTickerContract(tokenName, tokenSymbol, `ipfs://${ipfsHash}`, tokenDesc, creatorFee, ethers.parseEther(String(ethReserve)), ethers.parseUnits(tokenSupply, 18), signer as Signer);
-            const deployedAddress = await tx.getAddress();
+            const deployedAddress = await deployTickerContract(tokenName, tokenSymbol, `ipfs://${ipfsHash}`, tokenDesc, creatorFee, ethers.parseEther(String(ethReserve)), ethers.parseUnits(tokenSupply, 18), signer as Signer);
 
             const deploymentSheetData = {
                 tokenAddress: deployedAddress,

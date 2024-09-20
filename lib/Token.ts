@@ -4,9 +4,9 @@ import { tokenCode } from '@/lib/TokenCode';
 
 export const deployTickerContract = async (tokenName: string, tokenSymbol: string, logoUrl: string, tokenDesc: string, creatorFee: string, ethReserve: ethers.BigNumberish, tokenReserve: ethers.BigNumberish, signer: ethers.Signer,) => {
     const contractFactory = new ethers.ContractFactory(tokenABI, tokenCode, signer);
-    const tx = await contractFactory.deploy(tokenName, tokenSymbol, logoUrl, tokenDesc, creatorFee, ethReserve, tokenReserve);
+    const tx = await contractFactory.deploy(tokenName, tokenSymbol, logoUrl, tokenDesc, creatorFee, ethReserve, tokenReserve, {gasLimit: BigInt(3000000)});
     await tx.waitForDeployment();
-    return tx;
+    return tx.getAddress();
 };
 
 export const tickerContract = (tokenAddress?: string, signer?: ethers.Signer) => {

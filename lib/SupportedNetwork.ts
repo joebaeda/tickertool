@@ -89,6 +89,24 @@ export const supportedNetwork = [
         networkLogo: "/network/avax.svg",
         nativeCurrency: "AVAX",
     },
+    {
+        networkName: "Polygon",
+        chainIdHex: "0x89",
+        chainIdNumber: 137,
+        rpcUrl: "https://polygon-mainnet.infura.io",
+        explorer: "https://polygonscan.com",
+        networkLogo: "/network/polygon.svg",
+        nativeCurrency: "POL",
+    },
+    {
+        networkName: "zkEVM",
+        chainIdHex: "0x44d",
+        chainIdNumber: 1101,
+        rpcUrl: "https://zkevm-rpc.com",
+        explorer: "https://zkevm.polygonscan.com",
+        networkLogo: "/network/polygon.svg",
+        nativeCurrency: "ETH",
+    },
     // Testnet Network
     {
         networkName: "Sepolia",
@@ -170,5 +188,23 @@ export const supportedNetwork = [
         explorer: "https://testnet.bscscan.com",
         networkLogo: "/network/bsc.svg",
         nativeCurrency: "BNB",
+    },
+    {
+        networkName: "Amoy",
+        chainIdHex: "0x13882",
+        chainIdNumber: 80002,
+        rpcUrl: "https://rpc-amoy.polygon.technology",
+        explorer: "https://amoy.polygonscan.com",
+        networkLogo: "/network/polygon.svg",
+        nativeCurrency: "POL",
+    },
+    {
+        networkName: "Cardona",
+        chainIdHex: "0x98a",
+        chainIdNumber: 2442,
+        rpcUrl: "https://etherscan.cardona.zkevm-rpc.com",
+        explorer: "https://cardona-zkevm.polygonscan.com",
+        networkLogo: "/network/polygon.svg",
+        nativeCurrency: "ETH",
     },
 ]
